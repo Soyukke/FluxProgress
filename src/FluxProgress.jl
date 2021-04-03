@@ -22,28 +22,28 @@ function trainwithprogress!(loss, ps, data, opt; cb=() -> ())
     for (index, d) in enumerate(data)
         nbatch = length(d[1])
         try
-        local l
-        gs = gradient(ps) do
-            l = loss(batchmemaybe(d)...)
+            local l
+            gs = gradient(ps) do
+                l = loss(batchmemaybe(d)...)
+            end
+            update!(opt, ps, gs)
+            cb()
+            next!(
+                p;
+                showvalues=[
+                (:index, index),
+                (:loss, l/nbatch),
+                ]
+            )
+        catch ex
+            if ex isa StopException
+                break
+            elseif ex isa SkipException
+                continue
+            else
+                rethrow(ex)
+            end
         end
-        update!(opt, ps, gs)
-        cb()
-        next!(
-            p;
-            showvalues=[
-            (:index, index),
-            (:loss, l/nbatch),
-            ]
-        )
-    catch ex
-        if ex isa StopException
-            break
-        elseif ex isa SkipException
-            continue
-        else
-            rethrow(ex)
-        end
-      end
     end
 end
 
